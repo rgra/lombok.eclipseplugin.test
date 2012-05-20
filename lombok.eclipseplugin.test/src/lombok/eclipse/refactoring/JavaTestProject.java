@@ -2,6 +2,7 @@ package lombok.eclipse.refactoring;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,12 +23,13 @@ import org.eclipse.jdt.launching.IVMInstall;
 import org.eclipse.jdt.launching.JavaRuntime;
 import org.eclipse.jdt.launching.LibraryLocation;
 
-public class SimpleTestProject {
+public class JavaTestProject {
 
 	public static final String TEST_PROJECT_NAME = "TestProject";
 	private final IJavaProject javaProject;
 
-	public SimpleTestProject() throws CoreException {
+	public JavaTestProject() throws CoreException {
+		// http://sdqweb.ipd.kit.edu/wiki/JDT_Tutorial:_Creating_Eclipse_Java_Projects_Programmatically
 		IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(TEST_PROJECT_NAME);
 		project.create(null);
 		project.open(null);
@@ -93,6 +95,16 @@ public class SimpleTestProject {
 		return result;
 	}
 
+	public IFile createFile(IContainer parent, String name, InputStream content) throws CoreException, IOException {
+		try {
+			IFile result = parent.getFile(new Path(name));
+			result.create(content, true, null);
+			return result;
+		} finally {
+			content.close();
+		}
+	}
+
 	public IFile createFile(IContainer parent, String name, String content) throws CoreException {
 		IFile result = parent.getFile(new Path(name));
 		result.create(new ByteArrayInputStream(content.getBytes()), true, null);
@@ -104,10 +116,14 @@ public class SimpleTestProject {
 	}
 
 	public String getContent(IFile file) throws CoreException, IOException {
+		return getContent(file.getContents(false));
+	}
+
+	public String getContent(InputStream in) throws CoreException, IOException {
 		StringBuffer result = new StringBuffer();
 
 		char[] buffer = new char[1024];
-		InputStreamReader reader = new InputStreamReader(file.getContents(false));
+		InputStreamReader reader = new InputStreamReader(in);
 		try {
 			int amount;
 			while ((amount = reader.read(buffer)) != -1) {
